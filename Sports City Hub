@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Fervor - Daily Fresh Football News</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #004d00, #228B22); color: white; }
+        header { text-align: center; padding: 30px; background: #000; border-radius: 10px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 3em; text-shadow: 2px 2px 4px #000; }
+        .source { margin: 30px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .post { margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 8px; }
+        a { color: #ffd700; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Football Fervor</h1>
+        <p>Your daily dose of football news from top sources worldwide! ⚽</p>
+    </header>
+
+    <div id="news-container"></div>
+
+    <script>
+        // Free CORS proxy to fetch RSS (since direct fetch has restrictions)
+        const proxy = 'https://api.allorigins.win/raw?url=';
+
+        const sources = [
+            { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', name: 'BBC Sport Football' },
+            { url: 'https://www.skysports.com/rss/0,20501,11661,00.xml', name: 'Sky Sports Football' },
+            { url: 'https://www.goal.com/en/feeds/news?fmt=rss', name: 'Goal.com' },
+            { url: 'https://www.espn.com/espn/rss/soccer/news', name: 'ESPN Soccer' }
+            // Add more RSS feeds here!
+        ];
+
+        async function loadNews() {
+            const container = document.getElementById('news-container');
+            for (const source of sources) {
+                try {
+                    const response = await fetch(proxy + encodeURIComponent(source.url));
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, "text/xml");
+                    const items = xml.querySelectorAll('item');
+
+                    let html = `<div class="source"><h2>${source.name}</h2>`;
+                    for (let i = 0; i < Math.min(5, items.length); i++) {  // Show 5 latest per source
+                        const item = items[i];
+                        const title = item.querySelector('title')?.textContent || 'No title';
+                        const link = item.querySelector('link')?.textContent || '#';
+                        const desc = item.querySelector('description')?.textContent?.substring(0, 120) + '...' || '';
+                        html += `<div class="post"><a href="${link}" target="_blank">${title}</a><p>${desc}</p></div>`;
+                    }
+                    html += '</div>';
+                    container.innerHTML += html;
+                } catch (e) {
+                    console.error('Error loading ' + source.name, e);
+                }
+            }
+        }
+
+        loadNews();
+    </script>
+</body>
+</html>
